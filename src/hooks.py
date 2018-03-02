@@ -116,7 +116,7 @@ async def check_required(
     :param required:
     :return:
     """
-    for name in params:
-        if name in required and params.get(name) is None:
+    for name in required:
+        if params.get(name) is None:
             return False
     return True

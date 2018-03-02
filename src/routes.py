@@ -14,7 +14,10 @@ messages = {
 
 async def auth(request: web.Request):
     status, transaction_id = await asyncio.shield(process_auth(request))
-    model = await request.app['TRANSACTION_DB'][transaction_id].jsonify()
+    try:
+        model = await request.app['TRANSACTION_DB'][transaction_id].jsonify()
+    except KeyError:
+        model = None
     response = {
         'Success': True if status == 0 else False,
         'Model': model,
