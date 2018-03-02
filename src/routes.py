@@ -53,3 +53,5 @@ def setup(app):
     url = app.router
 
     url.add_post('/payments/cards/auth/', auth)
+    url.add_post('/payments/confirm/', confirm)
+    url.add_post('/payments/void/', void)
