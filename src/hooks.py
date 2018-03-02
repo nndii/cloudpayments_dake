@@ -12,7 +12,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     """
 
     :param request:
-    :return:
+    :return: Tuple(status_num, transaction_id)
     """
     params = await request.post()
     now = datetime.utcnow().strftime('%Y-%m-%d %X')
