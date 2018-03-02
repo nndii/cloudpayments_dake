@@ -10,6 +10,7 @@ async def send_to(url: str, transaction: Transaction) -> int:
     async with aiohttp.ClientSession(
             json_serialize=ujson.dumps,
             headers={'Content-Type': ''}) as session:
+
         async with session.post(url, data=params) as resp:
             status = await resp.json()
 

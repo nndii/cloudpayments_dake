@@ -41,8 +41,3 @@ class Transaction(typing.NamedTuple):
 
     async def replace(self, **kwargs):
         return self._replace(**kwargs)
-
-
-if __name__ == '__main__':
-    omg = Transaction(123, 123.1, 'OMG')
-    omg.jsonify()
