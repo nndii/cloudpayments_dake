@@ -45,7 +45,7 @@ async def void(request: web.Request):
         response['Message'] = 'Not enough parameters to proceed'
     elif status == 404:
         response['Message'] = 'Transaction not found'
-    elif status == 404:
+    elif status == 33:
         response['Message'] = 'Transaction was declined'
     else:
         response['Message'] = None
