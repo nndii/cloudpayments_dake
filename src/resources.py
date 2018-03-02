@@ -15,13 +15,28 @@ class Transaction(typing.NamedTuple):
     test_mode: int = 1
     currency: str = 'RUB'
     status: str = 'Created'
+    invoice_id: typing.Union[None, str] = None
+    account_id: typing.Union[None, str] = None
+    subscription_id: typing.Union[None, str] = None
+    email: typing.Union[None, str] = None
+    ip_country: typing.Union[None, str] = None
+    ip_city: typing.Union[None, str] = None
+    ip_region: typing.Union[None, str] = None
+    ip_district: typing.Union[None, str] = None
+    issuer: typing.Union[None, str] = None
+    issuer_bank_country: typing.Union[None, str] = None
+    description: typing.Union[None, str] = None
 
-    async def jsonify(self):
+    async def jsonify(self, except_fields=None):
+        if except_fields is None:
+            except_fields = []
+
         json_obj = dict()
         for field in self._fields:
             value = getattr(self, field)
             attr = ''.join((x.capitalize() for x in field.split('_')))
-            json_obj[attr] = value
+            if value is not None and field not in except_fields:
+                json_obj[attr] = value
         return json_obj
 
     async def replace(self, **kwargs):

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from aiohttp import web
 
-from .client import send_check
+from .client import send_to
 from .resources import Transaction
 
 
@@ -17,6 +17,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     params = await request.post()
     now = datetime.utcnow().strftime('%Y-%m-%d %X')
     transaction_id = await generate_id(request)
+    required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
 
     transaction = Transaction(
         transaction_id=transaction_id,
@@ -24,13 +25,15 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
         datetime=now,
         card_cryptogram_packet=params.get('CardCryptogramPacket'),
         name=params.get('Name'),
-        ip_address=params.get('IpAddress')
+        ip_address=params.get('IpAddress'),
+        description=params.get('Description'),
+        account_id=params.get('AccountId')
     )
 
-    if not all(transaction):
+    if not await check_required(params, required):
         return 55, 0
     else:
-        status = await send_check(request, transaction)
+        status = await send_to(request.app['CHECK_URL'], transaction)
         status_str = 'Authorized' if status == 0 else 'Declined'
 
     transaction = await transaction.replace(status=status_str)
@@ -45,7 +48,7 @@ async def process_confirm(request: web.Request) -> int:
     :return:
     """
     params = await request.post()
-    if not all(param for param in ('Amount', 'TransactionId')):
+    if not await check_required(params, {'Amount', 'TransactionId'}):
         return 55
 
     transaction_id = params.get('TransactionId')
@@ -54,7 +57,13 @@ async def process_confirm(request: web.Request) -> int:
     except IndexError:
         return 404
 
-    transaction = await transaction.replace(status='Confirmed')
+    if transaction.status == 'Declined':
+        return 33
+
+    status = await send_to(request.app['PAY_URL'], transaction)
+    status_str = 'Authorized' if status == 0 else 'Declined'
+
+    transaction = await transaction.replace(status=status_str)
     request.app['TRANSACTION_DB'][transaction_id] = transaction
     return 0
 
@@ -75,7 +84,13 @@ async def process_void(request: web.Request) -> int:
     except IndexError:
         return 404
 
-    transaction = await transaction.replace(status='Cancelled')
+    if transaction.status == 'Declined':
+        return 33
+
+    status = await send_to(request.app['FAIL_URL'], transaction)
+    status_str = 'Authorized' if status == 0 else 'Declined'
+
+    transaction = await transaction.replace(status=status_str)
     request.app['TRANSACTION_DB'][transaction_id] = transaction
     return 0
 
@@ -90,3 +105,18 @@ async def generate_id(request: web.Request) -> int:
         temp_id = secrets.randbelow(3333) + 1
         if temp_id not in request.app['TRANSACTION_DB']:
             return temp_id
+
+
+async def check_required(
+        params: typing.Mapping,
+        required: typing.Union[typing.Sequence, typing.Set]) -> bool:
+    """
+
+    :param params:
+    :param required:
+    :return:
+    """
+    for name in params:
+        if name in required and params.get(name) is None:
+            return False
+    return True
