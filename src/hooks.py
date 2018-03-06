@@ -17,6 +17,8 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     params = await request.post()
     transaction_id = await generate_id(request)
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
+    if not await check_required(params, required):
+        return 55, 0
 
     transaction = Transaction(
         transaction_id=transaction_id,
@@ -29,11 +31,8 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
         account_id=params.get('AccountId')
     )
 
-    if not await check_required(params, required):
-        return 55, 0
-    else:
-        status = await send_to(request.app['CHECK_URL'], transaction)
-        status_str = 'Authorized' if status == 0 else 'Declined'
+    status = await send_to(request.app['CHECK_URL'], transaction)
+    status_str = 'Authorized' if status == 0 else 'Declined'
 
     transaction = await transaction.replace(status=status_str)
     request.app['TRANSACTION_DB'][transaction_id] = transaction
