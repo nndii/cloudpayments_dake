@@ -4,11 +4,11 @@ from datetime import datetime
 
 from aiohttp import web
 
-from .client import send_to
-from .resources import Transaction
+from cp_fake.client import send_to
+from cp_fake.resources import Transaction
 
 
-async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
+async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Union[dict, None]]:
     """
 
     :param request:
@@ -18,7 +18,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     transaction_id = await generate_id(request)
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
     if not await check_required(params, required):
-        return 55, 0
+        return 55, 0, None
 
     transaction = Transaction(
         transaction_id=transaction_id,
@@ -36,7 +36,9 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
 
     transaction = await transaction.replace(status=status_str)
     request.app['TRANSACTION_DB'][transaction_id] = transaction
-    return status, transaction_id
+    model = await transaction.jsonify()
+
+    return status, transaction_id, model
 
 
 async def process_confirm(request: web.Request) -> int:

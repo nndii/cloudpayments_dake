@@ -3,6 +3,8 @@ FROM python:3.6
 WORKDIR /app
 COPY ./ /app
 
-RUN pip install -r requirements.txt
+RUN pip3 install gunicorn && \
+    python3 setup.py install
+
 EXPOSE 8080
-CMD ['env', '`cat config.env`', 'gunicorn', 'app:app']
+CMD ['env', '`cat config.env`', 'gunicorn', 'cp_fake:create_app()']

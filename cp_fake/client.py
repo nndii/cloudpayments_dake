@@ -1,14 +1,14 @@
-import ujson
+import json
 
 import aiohttp.web
 
-from .resources import Transaction
+from cp_fake.resources import Transaction
 
 
 async def send_to(url: str, transaction: Transaction) -> int:
     params = await transaction.jsonify()
     async with aiohttp.ClientSession(
-            json_serialize=ujson.dumps,
+            json_serialize=json.dumps,
             headers={'Content-Type': ''}) as session:
 
         async with session.post(url, data=params) as resp:

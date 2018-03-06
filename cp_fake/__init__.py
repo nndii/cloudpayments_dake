@@ -1,12 +1,7 @@
-import asyncio
-
 import os
-import uvloop
 from aiohttp import web
 
-from .routes import setup
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+from cp_fake.routes import setup
 
 
 def create_app() -> web.Application:

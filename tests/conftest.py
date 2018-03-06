@@ -1,9 +1,9 @@
-import pytest
 import datetime
 
-from src import create_app
-from src.resources import Transaction
+import pytest
 
+from cp_fake import create_app
+from cp_fake.resources import Transaction
 
 test_transaction = Transaction(
     transaction_id=777,
