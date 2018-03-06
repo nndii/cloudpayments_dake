@@ -14,7 +14,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     :param request:
     :return: Tuple(status_num, transaction_id)
     """
-    params = await request.post()
+    params = await request.json()
     transaction_id = await generate_id(request)
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
     if not await check_required(params, required):
@@ -45,7 +45,7 @@ async def process_confirm(request: web.Request) -> int:
     :param request:
     :return:
     """
-    params = await request.post()
+    params = await request.json()
     if not await check_required(params, {'Amount', 'TransactionId'}):
         return 55
 
@@ -72,7 +72,7 @@ async def process_void(request: web.Request) -> int:
     :param request:
     :return:
     """
-    params = await request.post()
+    params = await request.json()
     transaction_id = params.get('TransactionId')
     if not transaction_id:
         return 55

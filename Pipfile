@@ -11,6 +11,9 @@ aiohttp = "*"
 uvloop = "*"
 ujson = "*"
 gunicorn = "*"
+pytest = "*"
+pytest-aiohttp = "*"
+pytest-cov = "*"
 
 
 [dev-packages]

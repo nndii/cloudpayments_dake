@@ -7,7 +7,10 @@ from .hooks import process_auth, process_confirm, process_void
 messages = {
     55: 'Not enough parameters to proceed',
     404: 'Transaction not found',
-    33: 'Transaction was declined'
+    33: 'Transaction was declined',
+    10: 'Неверный номер заказа',
+    11: 'Неверная сумма',
+    13: 'Платеж не может быть принят'
 }
 
 
