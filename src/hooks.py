@@ -52,7 +52,7 @@ async def process_confirm(request: web.Request) -> int:
     transaction_id = params.get('TransactionId')
     try:
         transaction = request.app['TRANSACTION_DB'][transaction_id]
-    except IndexError:
+    except KeyError:
         return 404
 
     if transaction.status == 'Declined':
@@ -79,7 +79,7 @@ async def process_void(request: web.Request) -> int:
 
     try:
         transaction = request.app['TRANSACTION_DB'][transaction_id]
-    except IndexError:
+    except KeyError:
         return 404
 
     if transaction.status == 'Declined':
