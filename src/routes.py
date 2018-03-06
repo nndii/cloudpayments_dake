@@ -1,5 +1,4 @@
 import asyncio
-import ujson
 
 from aiohttp import web
 
@@ -12,41 +11,49 @@ messages = {
 }
 
 
-async def auth(request: web.Request):
-    status, transaction_id = await asyncio.shield(process_auth(request))
-    try:
-        model = await request.app['TRANSACTION_DB'][transaction_id].jsonify()
-    except KeyError:
-        model = None
-    response = {
-        'Success': True if status == 0 else False,
-        'Model': model,
-        'Message': messages.get(status)
-    }
-    return web.Response(body=ujson.dumps(response), content_type='application/json')
+class Auth(web.View):
+
+    async def post(self):
+        status, transaction_id = await asyncio.shield(process_auth(self.request))
+        try:
+            transaction_db = self.request.app['TRANSACTION_DB'][transaction_id]
+            model = await transaction_db.jsonify()
+        except KeyError:
+            model = None
+
+        json_resp = {
+            'Success': True if status == 0 else False,
+            'Model': model,
+            'Message': messages.get(status)
+        }
+        return web.json_response(json_resp)
 
 
-async def confirm(request: web.Request):
-    status = await asyncio.shield(process_confirm(request))
-    response = {
-        'Success': True if status == 0 else False,
-        'Message': messages.get(status)
-    }
-    return web.Response(body=ujson.dumps(response), content_type='application/json')
+class Confirm(web.View):
+
+    async def post(self):
+        status = await asyncio.shield(process_confirm(self.request))
+        json_resp = {
+            'Success': True if status == 0 else False,
+            'Message': messages.get(status)
+        }
+        return web.json_response(json_resp)
 
 
-async def void(request: web.Request):
-    status = await asyncio.shield(process_void(request))
-    response = {
-        'Success': True if status == 0 else False,
-        'Message': messages.get(status)
-    }
-    return web.Response(body=ujson.dumps(response), content_type='application/json')
+class Void(web.View):
+
+    async def post(self):
+        status = await asyncio.shield(process_void(self.request))
+        json_resp = {
+            'Success': True if status == 0 else False,
+            'Message': messages.get(status)
+        }
+        return web.json_response(json_resp)
 
 
 def setup(app):
     url = app.router
 
-    url.add_post('/payments/cards/auth/', auth)
-    url.add_post('/payments/confirm/', confirm)
-    url.add_post('/payments/void/', void)
+    url.add_view('/payments/cards/auth/', Auth)
+    url.add_view('/payments/confirm/', Confirm)
+    url.add_view('/payments/void/', Void)

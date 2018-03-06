@@ -1,10 +1,11 @@
+import datetime
 import typing
 
 
 class Transaction(typing.NamedTuple):
     transaction_id: int
     amount: float
-    datetime: str
+    datetime: datetime.datetime
     name: str
     ip_address: str
     card_cryptogram_packet: str
@@ -34,9 +35,13 @@ class Transaction(typing.NamedTuple):
         json_obj = dict()
         for field in self._fields:
             value = getattr(self, field)
+            # snake_case -> CamelCase
             attr = ''.join((x.capitalize() for x in field.split('_')))
             if value is not None and field not in except_fields:
-                json_obj[attr] = value
+                if attr == 'Datetime':
+                    json_obj[attr] = value.strftime('%Y-%m-%d %X')
+                else:
+                    json_obj[attr] = value
         return json_obj
 
     async def replace(self, **kwargs):

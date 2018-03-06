@@ -15,14 +15,13 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int]:
     :return: Tuple(status_num, transaction_id)
     """
     params = await request.post()
-    now = datetime.utcnow().strftime('%Y-%m-%d %X')
     transaction_id = await generate_id(request)
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
 
     transaction = Transaction(
         transaction_id=transaction_id,
         amount=float(params.get('Amount')),
-        datetime=now,
+        datetime=datetime.utcnow(),
         card_cryptogram_packet=params.get('CardCryptogramPacket'),
         name=params.get('Name'),
         ip_address=params.get('IpAddress'),
