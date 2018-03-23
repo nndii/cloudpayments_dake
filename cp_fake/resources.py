@@ -28,7 +28,11 @@ class Transaction(typing.NamedTuple):
     issuer_bank_country: typing.Union[None, str] = None
     description: typing.Union[None, str] = None
 
-    async def jsonify(self, except_fields=None):
+    def jsonify(
+            self,
+            except_fields: typing.Sequence=None,
+            add_fields: typing.Mapping=None) -> dict:
+        """transaction obj -> dictionary with CamelCase"""
         if except_fields is None:
             except_fields = []
 
@@ -42,7 +46,11 @@ class Transaction(typing.NamedTuple):
                     json_obj[attr] = value.strftime('%Y-%m-%d %X')
                 else:
                     json_obj[attr] = value
+
+        for field in add_fields:
+            json_obj[field] = add_fields[field]
+
         return json_obj
 
-    async def replace(self, **kwargs):
+    def replace(self, **kwargs):
         return self._replace(**kwargs)

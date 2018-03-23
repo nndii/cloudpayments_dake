@@ -1,7 +1,19 @@
 import os
+import asyncio
 from aiohttp import web
 
 from cp_fake.routes import setup
+from queue import Queue
+from cp_fake.hooks import process_3ds
+
+
+async def check_for_3ds(app: web.Application):
+    await asyncio.sleep(0.01)
+    while True:
+        print('Yeah...')
+        if not app['3ds'].empty():
+            await process_3ds(app, app['3ds'].get())
+        await asyncio.sleep(1.5)
 
 
 def create_app() -> web.Application:
@@ -12,6 +24,9 @@ def create_app() -> web.Application:
     app['PAY_URL'] = os.environ['PAY_URL']
     app['FAIL_URL'] = os.environ['FAIL_URL']
     app['TRANSACTION_DB'] = dict()
+    app['3ds'] = Queue()
+
+    app.on_startup.append(check_for_3ds)
     return app
 
 # loop = asyncio.get_event_loop()
