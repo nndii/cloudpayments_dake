@@ -1,10 +1,11 @@
-import os
 import asyncio
+import os
+from queue import Queue
+
 from aiohttp import web
 
-from cp_fake.routes import setup
-from queue import Queue
 from cp_fake.hooks import process_3ds
+from cp_fake.routes import setup
 
 
 async def check_for_3ds(app: web.Application):
