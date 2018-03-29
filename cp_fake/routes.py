@@ -40,9 +40,14 @@ async def void(request):
     })
 
 
+async def omg(request):
+    return 'aDASDASDSD'
+
+
 def setup(app):
     url = app.router
 
     url.add_post('/payments/cards/auth/', auth)
     url.add_post('/payments/confirm/', confirm)
     url.add_post('/payments/void/', void)
+    url.add_get('/', omg)
