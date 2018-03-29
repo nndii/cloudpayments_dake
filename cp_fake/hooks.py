@@ -15,6 +15,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
     :return: Tuple(status_num, transaction_id)
     """
     params = await request.json()
+    print(f'AUTH <-\n{params}')
     transaction_id = await generate_id(request)
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
     if not await check_required(params, required):
@@ -29,7 +30,8 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
         ip_address=params.get('IpAddress'),
         description=params.get('Description'),
         account_id=params.get('AccountId'),
-        invoice_id=params.get('InvoiceId')
+        invoice_id=params.get('InvoiceId'),
+        data=params.get('JsonData')
     )
 
     if transaction.card_cryptogram_packet.endswith('3ds'):
@@ -52,6 +54,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
         transaction = transaction.replace(status=status_str)
 
     request.app['TRANSACTION_DB'][transaction_id] = transaction
+    print(f'Added new transaction: \n{transaction.jsonify()}')
     return status, transaction_id, model
 
 
@@ -76,6 +79,7 @@ async def process_confirm(request: web.Request) -> int:
 
     transaction = transaction.replace(status='Confirmed')
     request.app['TRANSACTION_DB'][transaction_id] = transaction
+    print(f'Confirmed transaction:\n{transaction.jsonify()}')
     return 0
 
 
