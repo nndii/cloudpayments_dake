@@ -8,12 +8,23 @@ from cp_fake.hooks import process_3ds
 
 
 async def check_for_3ds(app: web.Application):
-    await asyncio.sleep(0.01)
-    while True:
-        print('Yeah...')
-        if not app['3ds'].empty():
-            await process_3ds(app, app['3ds'].get())
-        await asyncio.sleep(1.5)
+    try:
+        await asyncio.sleep(0.01)
+        while True:
+            if not app['3ds'].empty():
+                await process_3ds(app, app['3ds'].get())
+            await asyncio.sleep(1.5)
+    except asyncio.CancelledError:
+        print('Cancel 3ds listener..')
+
+
+async def start_bg_tasks(app: web.Application):
+    app['check_for_3ds'] = app.loop.create_task(check_for_3ds(app))
+
+
+async def cleanup_bg_tasks(app: web.Application):
+    print('cleanup background tasks')
+    app['check_for_3ds'].cancel()
 
 
 def create_app() -> web.Application:
@@ -26,22 +37,6 @@ def create_app() -> web.Application:
     app['TRANSACTION_DB'] = dict()
     app['3ds'] = Queue()
 
-    app.on_startup.append(check_for_3ds)
+    app.on_startup.append(start_bg_tasks)
+    app.on_cleanup.append(cleanup_bg_tasks)
     return app
-
-# loop = asyncio.get_event_loop()
-# app = loop.run_until_complete(create_app())
-#
-# handler = app.make_handler()
-# f = loop.create_server(handler, '127.0.0.1', 5000)
-# srv = loop.run_until_complete(f)
-# print('Serving at http://{}:{}/'.format(*srv.sockets[0].getsockname()))
-#
-# with suppress(KeyboardInterrupt):
-#     loop.run_forever()
-# srv.close()
-# loop.run_until_complete(srv.wait_closed())
-# loop.run_until_complete(app.shutdown())
-# loop.run_until_complete(handler.shutdown(60.0))
-# loop.run_until_complete(app.cleanup())
-# loop.close()
