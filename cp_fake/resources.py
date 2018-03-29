@@ -27,6 +27,7 @@ class Transaction(typing.NamedTuple):
     issuer: typing.Union[None, str] = None
     issuer_bank_country: typing.Union[None, str] = None
     description: typing.Union[None, str] = None
+    data: dict = None
 
     def jsonify(
             self,
@@ -46,6 +47,9 @@ class Transaction(typing.NamedTuple):
                     json_obj[attr] = value.strftime('%Y-%m-%d %X')
                 else:
                     json_obj[attr] = value
+
+        if add_fields is None:
+            add_fields = {}
 
         for field in add_fields:
             json_obj[field] = add_fields[field]
