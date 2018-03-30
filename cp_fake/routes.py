@@ -71,5 +71,5 @@ def setup(app):
     url.add_post('/payments/confirm/', confirm)
     url.add_post('/payments/void/', void)
     url.add_post('/acs', acs)
-    url.add_post('/payments/cards/post3ds')
+    url.add_post('/payments/cards/post3ds', post3ds)
     url.add_get('/', omg)
