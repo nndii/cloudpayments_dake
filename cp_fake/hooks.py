@@ -187,5 +187,5 @@ async def extract_secret(request: web.Request) -> str:
     decoded_body = base64.b64decode(auth_body).decode()
 
     secret = decoded_body.split(':')[1]
-    return secret
+    return secret.encode()
 
