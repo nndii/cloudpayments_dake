@@ -109,3 +109,4 @@ venv.bak/
 /Pipfile.lock
 /Pipfile
 /requirements.txt
+config.env
