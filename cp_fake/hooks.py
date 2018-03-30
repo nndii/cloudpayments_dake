@@ -61,7 +61,8 @@ async def process_acs(request: web.Request) -> int:
     transaction = request.app['3ds'][transaction_id]
     payment = transaction.data['payment']
     order = transaction.data['order']
-    term_url = f'{request.app["TERM_URL"]}/{order}/{payment}'
+    term_url = '{}/{}/{}'.format(request.app['TERM_URL'], order, payment)
+    print(term_url)
 
     status = await send_to(term_url, transaction, r_type='term')
     if not status:
