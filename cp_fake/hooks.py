@@ -9,11 +9,6 @@ from cp_fake.resources import Transaction
 
 
 async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Union[dict, None]]:
-    """
-
-    :param request:
-    :return: Tuple(status_num, transaction_id)
-    """
     params = await request.json()
     print(f'AUTH <-\n{params}')
     transaction_id = await generate_id(request)
@@ -38,32 +33,76 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
         model = {
             'TransactionId': transaction_id,
             'PaReq': "asdaodjo12111",
-            'AcsUrl': "https://privetkakdela.neochen"
+            'AcsUrl': f"{request.app['ACS_URL']}"
         }
         status = 1
-        request.app['3ds'].put(transaction)
+        request.app['3ds'][transaction_id] = transaction
     else:
         model = transaction.jsonify()
         status = await send_to(request.app['CHECK_URL'], transaction, r_type='check')
+        status_str = 'Authorized' if not status else 'Declined'
+        transaction = transaction.replace(status=status_str)
         if status:
             await send_to(request.app['FAIL_URL'], transaction, r_type='fail')
         else:
             await send_to(request.app['PAY_URL'], transaction, r_type='pay')
 
-        status_str = 'Authorized' if not status else 'Declined'
-        transaction = transaction.replace(status=status_str)
+        request.app['TRANSACTION_DB'][transaction_id] = transaction
 
-    request.app['TRANSACTION_DB'][transaction_id] = transaction
     print(f'Added new transaction: \n{transaction.jsonify()}')
     return status, transaction_id, model
 
 
-async def process_confirm(request: web.Request) -> int:
+async def process_acs(request: web.Request) -> int:
+    params = await request.post()
+    transaction_id = params.get('MD')
+    transaction = request.app['3ds'][transaction_id]
+    payment = transaction.data['payment']
+    order = transaction.data['order']
+    term_url = f'{request.app["TERM_URL"]}/{order}/{payment}'
+
+    status = await send_to(term_url, transaction, r_type='term')
+    if not status:
+        request.app['TRANSACTION_DB'][transaction_id] = transaction
+        del request.app['3ds'][transaction_id]
+
+    return status
+
+
+async def process_post3ds(request: web.Request) -> typing.Tuple[int, int, typing.Union[dict, None]]:
     """
 
     :param request:
     :return:
     """
+    params = await request.json()
+    print(f'AUTH <-\n{params}')
+    required = {'TransactionId', 'PaRes'}
+    if not await check_required(params, required):
+        return 55, 0, None
+
+    try:
+        transaction = request.app['TRANSACTION_DB'][params['TransactionId']]
+        transaction_id = transaction.transaction_id
+    except KeyError:
+        return 404, 0, None
+
+    model = transaction.jsonify()
+    status = await send_to(request.app['CHECK_URL'], transaction, r_type='check')
+    status_str = 'Authorized' if not status else 'Declined'
+    transaction = transaction.replace(status=status_str)
+    if status:
+        await send_to(request.app['FAIL_URL'], transaction, r_type='fail')
+    else:
+        await send_to(request.app['PAY_URL'], transaction, r_type='pay')
+
+    request.app['TRANSACTION_DB'][transaction_id] = transaction
+
+    print(f'POST3ds new transaction: \n{transaction.jsonify()}')
+    return status, transaction_id, model
+
+
+async def process_confirm(request: web.Request) -> int:
     params = await request.json()
     if not await check_required(params, {'Amount', 'TransactionId'}):
         return 55
@@ -105,24 +144,6 @@ async def process_void(request: web.Request) -> int:
     transaction = transaction.replace(status='Cancelled')
     request.app['TRANSACTION_DB'][transaction_id] = transaction
     return 0
-
-
-async def process_3ds(app: web.Application, transaction: Transaction):
-    """
-
-    :param app:
-    :param transaction:
-    :return:
-    """
-    status = await send_to(app['CHECK_URL'], transaction, r_type='check')
-    if status:
-        transaction = transaction.replace(status='Declined')
-        await send_to(app['FAIL_URL'], transaction, r_type='fail')
-    else:
-        transaction = transaction.replace(status='Authorized')
-        await send_to(app['PAY_URL'], transaction, r_type='pay')
-
-    app['TRANSACTION_DB'][transaction.transaction_id] = transaction
 
 
 async def generate_id(request: web.Request) -> int:

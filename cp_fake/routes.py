@@ -2,7 +2,7 @@ import asyncio
 
 from aiohttp import web
 
-from cp_fake.hooks import process_auth, process_confirm, process_void
+from cp_fake.hooks import process_auth, process_confirm, process_void, process_acs
 
 messages = {
     55: 'Not enough parameters to proceed',
@@ -40,6 +40,23 @@ async def void(request):
     })
 
 
+async def acs(request):
+    status = await asyncio.shield(process_acs(request))
+    return web.json_response({
+        'Success': True if status == 0 else False,
+        'Message': None
+    })
+
+
+async def post3ds(request):
+    status, transaction_id, model = await asyncio.shield(process_post3ds(request))
+    return web.json_response({
+        'Success': True if status == 0 else False,
+        'Model': model,
+        'Message': messages.get(status)
+    })
+
+
 async def omg(request):
     return 'aDASDASDSD'
 
@@ -50,4 +67,6 @@ def setup(app):
     url.add_post('/payments/cards/auth/', auth)
     url.add_post('/payments/confirm/', confirm)
     url.add_post('/payments/void/', void)
+    url.add_post('/acs', acs)
+    url.add_post('/payments/cards/post3ds')
     url.add_get('/', omg)
