@@ -55,7 +55,9 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
 
 async def process_acs(request: web.Request) -> int:
     params = await request.post()
-    transaction_id = params.get('MD')
+    print(f'ACS PARAMS: {params}')
+    transaction_id = int(params.get('MD'))
+    print(request.app['3ds'])
     transaction = request.app['3ds'][transaction_id]
     payment = transaction.data['payment']
     order = transaction.data['order']

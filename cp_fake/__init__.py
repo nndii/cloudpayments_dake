@@ -13,6 +13,7 @@ def create_app() -> web.Application:
     app['PAY_URL'] = os.environ['PAY_URL']
     app['FAIL_URL'] = os.environ['FAIL_URL']
     app['ACS_URL'] = os.environ['ACS_URL']
+    app['TERM_URL'] = os.environ['TERM_URL']
     app['TRANSACTION_DB'] = dict()
     app['3ds'] = dict()
     return app
