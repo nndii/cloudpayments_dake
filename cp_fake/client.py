@@ -28,7 +28,7 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
     signature = hmac.new(secret, prepped.body, digestmod=hashlib.sha256)
     prepped.headers['Content-HMAC'] = signature.hexdigest()
 
-    with requests.Session as s:
+    with requests.Session() as s:
         resp = s.send(prepped)
         print(f'SEND_TO HEADERS <-\n{resp.headers}')
         print(f'SEND_TO STATUS <-\n{resp.status_code}')
