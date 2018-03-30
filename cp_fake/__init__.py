@@ -2,7 +2,6 @@ import os
 
 from aiohttp import web
 
-from cp_fake.hooks import process_3ds
 from cp_fake.routes import setup
 
 

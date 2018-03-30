@@ -1,8 +1,11 @@
 import asyncio
 
 from aiohttp import web
-
-from cp_fake.hooks import process_auth, process_confirm, process_void, process_acs
+from cp_fake.hooks import (process_auth,
+                           process_confirm,
+                           process_void,
+                           process_acs,
+                           process_post3ds)
 
 messages = {
     55: 'Not enough parameters to proceed',
