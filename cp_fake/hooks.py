@@ -6,6 +6,7 @@ from aiohttp import web
 
 from cp_fake.client import send_to
 from cp_fake.resources import Transaction
+import base64
 
 
 async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Union[dict, None]]:
@@ -15,6 +16,8 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
     if not await check_required(params, required):
         return 55, 0, None
+
+    secret = await extract_secret(request)
 
     transaction = Transaction(
         transaction_id=transaction_id,
@@ -39,13 +42,13 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
         request.app['3ds'][transaction_id] = transaction
     else:
         model = transaction.jsonify()
-        status = await send_to(request.app['CHECK_URL'], transaction, r_type='check')
+        status = await send_to(request.app['CHECK_URL'], transaction, secret, r_type='check')
         status_str = 'Authorized' if not status else 'Declined'
         transaction = transaction.replace(status=status_str)
         if status:
-            await send_to(request.app['FAIL_URL'], transaction, r_type='fail')
+            await send_to(request.app['FAIL_URL'], transaction, secret, r_type='fail')
         else:
-            await send_to(request.app['PAY_URL'], transaction, r_type='pay')
+            await send_to(request.app['PAY_URL'], transaction, secret, r_type='pay')
 
         request.app['TRANSACTION_DB'][transaction_id] = transaction
 
@@ -64,7 +67,8 @@ async def process_acs(request: web.Request) -> int:
     term_url = '{}/{}/{}'.format(request.app['TERM_URL'], order, payment)
     print(term_url)
 
-    status = await send_to(term_url, transaction, r_type='term')
+    secret = await extract_secret(request)
+    status = await send_to(term_url, transaction, secret, r_type='term')
     if not status:
         request.app['TRANSACTION_DB'][transaction_id] = transaction
         del request.app['3ds'][transaction_id]
@@ -91,13 +95,14 @@ async def process_post3ds(request: web.Request) -> typing.Tuple[int, int, typing
         return 404, 0, None
 
     model = transaction.jsonify()
-    status = await send_to(request.app['CHECK_URL'], transaction, r_type='check')
+    secret = await extract_secret(request)
+    status = await send_to(request.app['CHECK_URL'], transaction, secret, r_type='check')
     status_str = 'Authorized' if not status else 'Declined'
     transaction = transaction.replace(status=status_str)
     if status:
-        await send_to(request.app['FAIL_URL'], transaction, r_type='fail')
+        await send_to(request.app['FAIL_URL'], transaction, secret, r_type='fail')
     else:
-        await send_to(request.app['PAY_URL'], transaction, r_type='pay')
+        await send_to(request.app['PAY_URL'], transaction, secret, r_type='pay')
 
     request.app['TRANSACTION_DB'][transaction_id] = transaction
 
@@ -174,3 +179,13 @@ async def check_required(
         if params.get(name) is None:
             return False
     return True
+
+
+async def extract_secret(request: web.Request) -> str:
+    auth = request.headers['Authorization']
+    auth_body = auth.strip('Basic').strip().encode()
+    decoded_body = base64.b64decode(auth_body).decode()
+
+    secret = decoded_body.split(':')[1]
+    return secret
+

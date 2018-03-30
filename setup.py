@@ -13,5 +13,5 @@ setup(
     url='https://github.com/nndii/cloudpayments_fake',
     keywords=['ticketscloud', 'cloudpayments'],
     packages=['cp_fake'],
-    install_requires=['aiohttp'],
+    install_requires=['aiohttp', 'requests'],
 )
