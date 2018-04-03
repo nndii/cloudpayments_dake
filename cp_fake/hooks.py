@@ -182,10 +182,12 @@ async def check_required(
 
 
 async def extract_secret(request: web.Request) -> str:
+    print(f'HEADERS <- {request.headers}')
     auth = request.headers['Authorization']
     auth_body = auth.strip('Basic').strip().encode()
     decoded_body = base64.b64decode(auth_body).decode()
 
     secret = decoded_body.split(':')[1]
-    return secret.encode()
+    print(f'SECRET CP -> {secret}')
+    return secret.encode('utf-8')
 

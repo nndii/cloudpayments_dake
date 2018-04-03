@@ -3,6 +3,7 @@ import json
 import requests
 import hmac
 import hashlib
+import base64
 
 from cp_fake.resources import Transaction
 
@@ -14,7 +15,7 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
 
     if r_type == 'term':
         params = {
-            'TransactionId': transaction.transaction_id,
+            'MD': transaction.transaction_id,
             'PaRes': '11213asdasdasd'
         }
     else:
@@ -25,8 +26,10 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
     headers = {'Content-HMAC': ''}
     request = requests.Request('POST', url, json=params, headers=headers)
     prepped = request.prepare()
-    signature = hmac.new(secret, prepped.body, digestmod=hashlib.sha256)
-    prepped.headers['Content-HMAC'] = signature.hexdigest()
+    signature = hmac.new(secret, prepped.body, digestmod=hashlib.sha256).digest()
+    signature = base64.b64encode(signature).decode('utf-8')
+
+    prepped.headers['Content-HMAC'] = signature
 
     with requests.Session() as s:
         resp = s.send(prepped)
