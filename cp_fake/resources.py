@@ -1,5 +1,6 @@
 import datetime
 import typing
+import json
 
 
 class Transaction(typing.NamedTuple):
@@ -45,6 +46,8 @@ class Transaction(typing.NamedTuple):
             if value is not None and field not in except_fields:
                 if attr == 'Datetime':
                     json_obj[attr] = value.strftime('%Y-%m-%d %X')
+                elif attr == 'Data':
+                    json_obj[attr] = json.dumps(value)
                 else:
                     json_obj[attr] = value
 
