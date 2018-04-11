@@ -4,7 +4,7 @@ import typing
 
 class Transaction(typing.NamedTuple):
     transaction_id: int
-    amount: float
+    payment_amount: float
     datetime: datetime.datetime
     name: str
     ip_address: str
@@ -14,7 +14,7 @@ class Transaction(typing.NamedTuple):
     card_type: str = 'VISA'
     card_exp_date: str = '15/24'
     test_mode: int = 1
-    currency: str = 'RUB'
+    payment_currency: str = 'RUB'
     status: str = 'Created'
     invoice_id: typing.Union[None, str] = None
     account_id: typing.Union[None, str] = None

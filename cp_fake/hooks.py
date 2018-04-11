@@ -21,7 +21,7 @@ async def process_auth(request: web.Request) -> typing.Tuple[int, int, typing.Un
 
     transaction = Transaction(
         transaction_id=transaction_id,
-        amount=float(params.get('Amount')),
+        payment_amount=float(params.get('Amount')),
         datetime=datetime.utcnow(),
         card_cryptogram_packet=params.get('CardCryptogramPacket'),
         name=params.get('Name'),
