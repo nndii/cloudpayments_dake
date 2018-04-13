@@ -1,8 +1,17 @@
 import os
+import logging
+import sys
 
 from aiohttp import web
 
 from cp_fake.routes import setup
+
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(levelname)7s: %(message)s',
+    stream=sys.stdout,
+)
 
 
 def create_app() -> web.Application:
@@ -16,4 +25,5 @@ def create_app() -> web.Application:
     app['TERM_URL'] = os.environ['TERM_URL']
     app['TRANSACTION_DB'] = dict()
     app['3ds'] = dict()
+    app['log'] = logging.getLogger('')
     return app

@@ -6,9 +6,13 @@ import hashlib
 import base64
 
 from cp_fake.resources import Transaction
+from cp_fake.utils import extract_secret
+from aiohttp import web
 
 
-async def send_to(url: str, transaction: Transaction, secret: str, r_type: str = 'check') -> int:
+async def send_to(url: str, transaction: Transaction,
+                  request: web.Request, r_type: str = 'check') -> int:
+
     add_fields = {}
     if r_type == 'check':
         add_fields['OperationType'] = 'Payment'
@@ -21,8 +25,9 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
     else:
         params = transaction.jsonify(add_fields=add_fields)
 
-    print(f'SEND_TO ->\n{params}')
+    request.app['log'].info(f'SEND_TO ->\n{params}')
 
+    secret = extract_secret(request)
     headers = {'Content-HMAC': ''}
     request = requests.Request('POST', url, params=params, headers=headers)
     prepped = request.prepare()
@@ -33,8 +38,8 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
 
     with requests.Session() as s:
         resp = s.send(prepped)
-        print(f'SEND_TO HEADERS <-\n{resp.headers}')
-        print(f'SEND_TO STATUS <-\n{resp.status_code}')
+        request.app['log'].info(f'SEND_TO HEADERS <-\n{resp.headers}')
+        request.app['log'].info(f'SEND_TO STATUS <-\n{resp.status_code}')
 
         if r_type == 'term':
             return int(not resp.ok)
@@ -43,10 +48,10 @@ async def send_to(url: str, transaction: Transaction, secret: str, r_type: str =
             resp_data = resp.json()
         except requests.RequestException:
             text = resp.text()
-            print(f'SEND_TO TEXT <-\n{text}')
+            request.app['log'].info(f'SEND_TO TEXT <-\n{text}')
             resp_data = json.loads(text)
 
-        print(f'SEND_TO RETURNED <-\n{resp_data}')
+        request.app['log'].info(f'SEND_TO RETURNED <-\n{resp_data}')
 
         if 'code' not in resp_data:
             return 55
