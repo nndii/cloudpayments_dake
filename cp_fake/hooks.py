@@ -33,8 +33,9 @@ async def process_auth(request: web.Request) -> Response:
         invoice_id=params.get('InvoiceId'),
         data=params.get('JsonData')
     )
-
-    if transaction.card_cryptogram_packet.endswith('3ds'):
+    _3ds = int(transaction.card_cryptogram_packet.split(':')[0])
+    result = int(transaction.card_cryptogram_packet.split(':')[0])
+    if _3ds:
         model = {
             'TransactionId': transaction.transaction_id,
             'PaReq': "asdaodjo12111",
@@ -51,6 +52,7 @@ async def process_auth(request: web.Request) -> Response:
             request=request,
             r_type='check',
         )
+        status = result
         status_str = 'Authorized' if not status else 'Declined'
         transaction = transaction.replace(status=status_str)
 
