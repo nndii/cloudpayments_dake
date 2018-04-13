@@ -4,6 +4,7 @@ setup(
     name='cp_fake',
     version='1.0',
     description='',
+    zip_safe=False,
     classifiers=[
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3.6',
