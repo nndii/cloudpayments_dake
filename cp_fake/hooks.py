@@ -80,7 +80,7 @@ async def process_auth(request: web.Request) -> Response:
 
 
 async def process_acs(request: web.Request) -> int:
-    params = await request.post()
+    params = await request.json()
     request.app['log'].info(f'ACS PARAMS: {params}')
     t_id = int(params.get('MD'))
     transaction = request.app['3ds'][t_id]
