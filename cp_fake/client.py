@@ -27,7 +27,13 @@ async def send_to(url: str, transaction: Transaction,
 
     request.app['log'].info(f'SEND_TO ->\n{params}')
 
-    secret = extract_secret(request)
+    try:
+        secret = extract_secret(request)
+    except KeyError:
+        secret = request.app['secret']
+    else:
+        request.app['secret'] = secret
+
     headers = {'Content-HMAC': ''}
     request_ = requests.Request('POST', url, data=params, headers=headers)
     prepped = request_.prepare()
@@ -40,6 +46,7 @@ async def send_to(url: str, transaction: Transaction,
         resp = s.send(prepped)
         request.app['log'].info(f'SEND_TO HEADERS <-\n{resp.headers}')
         request.app['log'].info(f'SEND_TO STATUS <-\n{resp.status_code}')
+        request.app['log'].info(f'SEND_TO RETURNED <- \n{resp.content.decode()}')
 
         if r_type == 'term':
             return int(not resp.ok)

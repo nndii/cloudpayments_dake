@@ -1,13 +1,10 @@
-import secrets
 import typing
 from datetime import datetime
 
 from aiohttp import web
-
 from cp_fake.client import send_to
 from cp_fake.resources import Transaction
 from cp_fake.utils import generate_id, check_required, extract_secret
-
 
 Response = typing.Tuple[int, int, typing.Union[dict, None]]
 
@@ -15,6 +12,7 @@ Response = typing.Tuple[int, int, typing.Union[dict, None]]
 async def process_auth(request: web.Request) -> Response:
     params = await request.json()
     request.app['log'].info(f'AUTH <-\n{params}')
+    request.app['secret'] = extract_secret(request)
 
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
     if not check_required(params, required):
@@ -34,7 +32,8 @@ async def process_auth(request: web.Request) -> Response:
         data=params.get('JsonData')
     )
     _3ds = int(transaction.card_cryptogram_packet.split(':')[0])
-    result = int(transaction.card_cryptogram_packet.split(':')[0])
+    result = int(transaction.card_cryptogram_packet.split(':')[-1])
+    request.app['log'].debug(f"RESULT: {result}")
     if _3ds:
         model = {
             'TransactionId': transaction.transaction_id,
@@ -45,16 +44,18 @@ async def process_auth(request: web.Request) -> Response:
 
         request.app['3ds'][transaction.transaction_id] = transaction
     else:
-        model = transaction.jsonify()
         status = await send_to(
             url=request.app['CHECK_URL'],
             transaction=transaction,
             request=request,
             r_type='check',
         )
+
         status = result
         status_str = 'Authorized' if not status else 'Declined'
         transaction = transaction.replace(status=status_str)
+        model = transaction.jsonify() if not status \
+            else transaction.jsonify(add_fields={'CardHolderMessage': 'privet'})
 
         if status:
             await send_to(
@@ -74,6 +75,7 @@ async def process_auth(request: web.Request) -> Response:
         request.app['TRANSACTION_DB'][transaction.transaction_id] = transaction
 
     request.app['log'].debug(f'Added new transaction: \n{transaction.jsonify()}')
+    request.app['log'].debug(f'AUTH MODEL -> \n{model}')
     return status, transaction.transaction_id, model
 
 
@@ -186,6 +188,3 @@ async def process_void(request: web.Request) -> int:
     transaction = transaction.replace(status='Cancelled')
     request.app['TRANSACTION_DB'][t_id] = transaction
     return 0
-
-
-

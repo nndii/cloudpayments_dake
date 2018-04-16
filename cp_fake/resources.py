@@ -32,8 +32,8 @@ class Transaction(typing.NamedTuple):
 
     def jsonify(
             self,
-            except_fields: typing.Sequence=None,
-            add_fields: typing.Mapping=None) -> dict:
+            except_fields: typing.Sequence = None,
+            add_fields: typing.Mapping = None) -> dict:
         """transaction obj -> dictionary with CamelCase"""
         if except_fields is None:
             except_fields = []
