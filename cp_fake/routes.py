@@ -60,6 +60,14 @@ async def post3ds(request):
     })
 
 
+async def check_finished(request):
+    t_id = request.match_info.get('t_id', 'OMG')
+    if str(t_id) in request.app['finish']:
+        return web.Response(text=request.app['finish'][t_id], status=200)
+    else:
+        return web.Response(text='OMG', status=400)
+
+
 async def omg(request):
     return 'aDASDASDSD'
 
@@ -72,4 +80,5 @@ def setup(app):
     url.add_post('/payments/void/', void)
     url.add_post('/acs', acs)
     url.add_post('/payments/cards/post3ds', post3ds)
+    url.add_get('/check_finished/{t_id}', check_finished)
     url.add_get('/', omg)

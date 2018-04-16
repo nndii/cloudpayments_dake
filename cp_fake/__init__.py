@@ -25,5 +25,6 @@ def create_app() -> web.Application:
     app['TERM_URL'] = os.environ['TERM_URL']
     app['TRANSACTION_DB'] = dict()
     app['3ds'] = dict()
+    app['finish'] = dict()
     app['log'] = logging.getLogger('')
     return app

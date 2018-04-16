@@ -4,14 +4,16 @@ import requests
 import hmac
 import hashlib
 import base64
+import typing
 
 from cp_fake.resources import Transaction
 from cp_fake.utils import extract_secret
 from aiohttp import web
 
 
+response_ = typing.Union[typing.Tuple[int, str], int]
 async def send_to(url: str, transaction: Transaction,
-                  request: web.Request, r_type: str = 'check') -> int:
+                  request: web.Request, r_type: str = 'check') -> response_:
 
     add_fields = {}
     if r_type == 'check':
@@ -49,7 +51,7 @@ async def send_to(url: str, transaction: Transaction,
         request.app['log'].info(f'SEND_TO RETURNED <- \n{resp.content.decode()}')
 
         if r_type == 'term':
-            return int(not resp.ok)
+            return int(not resp.ok), resp.text
 
         try:
             resp_data = resp.json()

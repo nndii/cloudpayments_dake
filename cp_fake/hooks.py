@@ -88,10 +88,10 @@ async def process_acs(request: web.Request) -> int:
     order = transaction.data['order']
     term_url = '{}/{}/{}'.format(request.app['TERM_URL'], order, payment)
 
-    status = await send_to(term_url, transaction, request, r_type='term')
+    status, text = await send_to(term_url, transaction, request, r_type='term')
     if not status:
         request.app['TRANSACTION_DB'][t_id] = transaction
-        del request.app['3ds'][t_id]
+        request.app['finish'][str(transaction.transaction_id)] = text
 
     return status
 
