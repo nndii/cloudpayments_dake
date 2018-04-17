@@ -84,7 +84,6 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -109,4 +108,3 @@ venv.bak/
 /Pipfile.lock
 /Pipfile
 /requirements.txt
-config.env
