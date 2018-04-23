@@ -11,7 +11,6 @@ Response = typing.Tuple[int, int, typing.Union[dict, None]]
 
 async def process_auth(request: web.Request) -> Response:
     params = await request.json()
-    request.app['log'].info(f'AUTH <-\n{params}')
     request.app['secret'] = extract_secret(request)
 
     required = {'Amount', 'CardCryptogramPacket', 'Name', 'IpAddress'}
@@ -33,7 +32,6 @@ async def process_auth(request: web.Request) -> Response:
     )
     _3ds = int(transaction.card_cryptogram_packet.split(':')[0])
     result = int(transaction.card_cryptogram_packet.split(':')[-1])
-    request.app['log'].debug(f"RESULT: {result}")
     if _3ds:
         model = {
             'TransactionId': transaction.transaction_id,
@@ -74,14 +72,11 @@ async def process_auth(request: web.Request) -> Response:
 
         request.app['TRANSACTION_DB'][transaction.transaction_id] = transaction
 
-    request.app['log'].debug(f'Added new transaction: \n{transaction.jsonify()}')
-    request.app['log'].debug(f'AUTH MODEL -> \n{model}')
     return status, transaction.transaction_id, model
 
 
 async def process_acs(request: web.Request) -> int:
     params = await request.json()
-    request.app['log'].info(f'ACS PARAMS: {params}')
     t_id = int(params.get('MD'))
     transaction = request.app['3ds'][t_id]
     payment = transaction.data['payment']
@@ -106,7 +101,6 @@ async def process_post3ds(request: web.Request) -> Response:
     request.app['log'].info(f'AUTH <-\n{params}')
     required = {'TransactionId', 'PaRes'}
     if not check_required(params, required):
-        request.app['log'].error('check required failed')
         return 55, 0, None
 
     try:
@@ -141,7 +135,6 @@ async def process_post3ds(request: web.Request) -> Response:
 
     request.app['TRANSACTION_DB'][transaction_id] = transaction
 
-    request.app['log'].info(f'POST3ds new transaction: \n{transaction.jsonify()}')
     return status, transaction_id, model
 
 
@@ -162,7 +155,6 @@ async def process_confirm(request: web.Request) -> int:
 
     transaction = transaction.replace(status='Confirmed')
     request.app['TRANSACTION_DB'][t_id] = transaction
-    print(f'Confirmed transaction:\n{transaction.jsonify()}')
     return 0
 
 

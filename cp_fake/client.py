@@ -1,20 +1,18 @@
-import json
-
-import requests
-import hmac
 import hashlib
-import base64
+import hmac
+import json
 import typing
 
+import requests
+from aiohttp import web
 from cp_fake.resources import Transaction
 from cp_fake.utils import extract_secret
-from aiohttp import web
-
 
 response_ = typing.Union[typing.Tuple[int, str], int]
+
+
 async def send_to(url: str, transaction: Transaction,
                   request: web.Request, r_type: str = 'check') -> response_:
-
     add_fields = {}
     if r_type == 'check':
         add_fields['OperationType'] = 'Payment'
@@ -40,15 +38,11 @@ async def send_to(url: str, transaction: Transaction,
     request_ = requests.Request('POST', url, data=params, headers=headers)
     prepped = request_.prepare()
     signature = hmac.new(secret, prepped.body.encode('utf-8'), digestmod=hashlib.sha256).digest()
-    signature = base64.b64encode(signature)
 
     prepped.headers['Content-HMAC'] = signature
 
     with requests.Session() as s:
         resp = s.send(prepped)
-        request.app['log'].info(f'SEND_TO HEADERS <-\n{resp.headers}')
-        request.app['log'].info(f'SEND_TO STATUS <-\n{resp.status_code}')
-        request.app['log'].info(f'SEND_TO RETURNED <- \n{resp.content.decode()}')
 
         if r_type == 'term':
             return int(not resp.ok), resp.text
@@ -57,10 +51,7 @@ async def send_to(url: str, transaction: Transaction,
             resp_data = resp.json()
         except requests.RequestException:
             text = resp.text()
-            request.app['log'].info(f'SEND_TO TEXT <-\n{text}')
             resp_data = json.loads(text)
-
-        request.app['log'].info(f'SEND_TO RETURNED <-\n{resp_data}')
 
         if 'code' not in resp_data:
             return 55

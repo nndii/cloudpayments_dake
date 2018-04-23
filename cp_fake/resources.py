@@ -1,6 +1,6 @@
 import datetime
-import typing
 import json
+import typing
 
 
 class Transaction(typing.NamedTuple):
@@ -31,9 +31,9 @@ class Transaction(typing.NamedTuple):
     data: dict = None
 
     def jsonify(
-            self,
-            except_fields: typing.Sequence = None,
-            add_fields: typing.Mapping = None) -> dict:
+        self,
+        except_fields: typing.Sequence = None,
+        add_fields: typing.Mapping = None) -> dict:
         """transaction obj -> dictionary with CamelCase"""
         if except_fields is None:
             except_fields = []
