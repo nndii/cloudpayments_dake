@@ -37,7 +37,7 @@ async def send_to(url: str, transaction: Transaction,
     headers = {'Content-HMAC': ''}
     request_ = requests.Request('POST', url, data=params, headers=headers)
     prepped = request_.prepare()
-    signature = hmac.new(secret, prepped.body.encode('utf-8'), digestmod=hashlib.sha256).digest()
+    signature = hmac.new(secret, prepped.body.encode('utf-8'), digestmod=hashlib.sha256).hexdigest()
 
     prepped.headers['Content-HMAC'] = signature
 
