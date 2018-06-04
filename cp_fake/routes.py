@@ -69,7 +69,7 @@ async def check_finished(request):
 
 
 async def omg(request):
-    return 'aDASDASDSD'
+    return web.Response(text='aDASDASDSD')
 
 
 def setup(app):
